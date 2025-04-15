@@ -1,26 +1,26 @@
-"""Utils for evaluating policies in LIBERO simulation environments."""
+"""Utils for evaluating policies in LIBERO simulation environments.
+Inspired from embodied-CoT/libero_scripts/regenerate_libero_dataset.py
+"""
 
 import math
 import os
-
+import time
 import imageio
 import numpy as np
 import tensorflow as tf
 from libero.libero import get_libero_path
-from libero.libero.envs import OffScreenRenderEnv
+from libero.libero.envs import SegmentationRenderEnv
 
-from experiments.robot.robot_utils import (
-    DATE,
-    DATE_TIME,
-)
+DATE = time.strftime("%Y_%m_%d")
+DATE_TIME = time.strftime("%Y_%m_%d-%H_%M_%S")
 
 
 def get_libero_env(task, model_family, resolution=256):
     """Initializes and returns the LIBERO environment, along with the task description."""
     task_description = task.language
     task_bddl_file = os.path.join(get_libero_path("bddl_files"), task.problem_folder, task.bddl_file)
-    env_args = {"bddl_file_name": task_bddl_file, "camera_heights": resolution, "camera_widths": resolution}
-    env = OffScreenRenderEnv(**env_args)
+    env_args = {"bddl_file_name": task_bddl_file, "camera_heights": resolution, "camera_widths": resolution, "camer_depths": True}
+    env = SegmentationRenderEnv(**env_args)
     env.seed(0)  # IMPORTANT: seed seems to affect object positions even when using fixed initial state
     return env, task_description
 

@@ -21,6 +21,7 @@ Usage:
             --libero_raw_data_dir ./LIBERO/libero/datasets/libero_spatial \
             --libero_target_dir ./LIBERO/libero/datasets/libero_spatial_no_noops
 
+Inspired from embodied-CoT/libero_scripts/regenerate_libero_dataset.py
 """
 
 import argparse
@@ -39,7 +40,7 @@ from experiments.robot.libero.libero_utils import (
     get_libero_env,
 )
 
-
+# import mediapy
 IMAGE_RESOLUTION = 256
 
 
@@ -131,6 +132,7 @@ def main(args):
             joint_states = []
             robot_states = []
             agentview_images = []
+            agentview_segmentation_instances = []
             eye_in_hand_images = []
 
             # Replay original demo actions in environment and record observations
@@ -170,6 +172,7 @@ def main(args):
                     )
                 )
                 agentview_images.append(obs["agentview_image"])
+                agentview_segmentation_instances.append(obs["agentview_segmentation_instance"])
                 eye_in_hand_images.append(obs["robot0_eye_in_hand_image"])
 
                 # Execute demo action in environment
@@ -192,6 +195,8 @@ def main(args):
                 obs_grp.create_dataset("ee_ori", data=np.stack(ee_states, axis=0)[:, 3:])
                 obs_grp.create_dataset("agentview_rgb", data=np.stack(agentview_images, axis=0))
                 obs_grp.create_dataset("eye_in_hand_rgb", data=np.stack(eye_in_hand_images, axis=0))
+                obs_grp.create_dataset("agentview_segmentation_instance", data=np.stack(agentview_segmentation_instances, axis=0))
+                ep_data_grp.create_dataset("instance_names", data=np.array([key.encode("utf-8") for key in env.env.model.instances_to_ids.keys()]))
                 ep_data_grp.create_dataset("actions", data=actions)
                 ep_data_grp.create_dataset("states", data=np.stack(states))
                 ep_data_grp.create_dataset("robot_states", data=np.stack(robot_states, axis=0))
@@ -199,7 +204,9 @@ def main(args):
                 ep_data_grp.create_dataset("dones", data=dones)
 
                 num_success += 1
-
+            
+            # agentview_images_np = np.array(agentview_images)[:,::-1,::-1]
+            # mediapy.write_video(f"runs/{args.libero_task_suite}_Task_{task_id}_Demo_{i}.mp4", agentview_images_np, fps=10)
             num_replays += 1
 
             # Record success/false and initial environment state in metainfo dict
@@ -244,6 +251,6 @@ if __name__ == "__main__":
     parser.add_argument("--libero_target_dir", type=str,
                         help="Path to regenerated dataset directory. Example: ./LIBERO/libero/datasets/libero_spatial_no_noops", required=True)
     args = parser.parse_args()
-
+    print(args)
     # Start data regeneration
     main(args)
