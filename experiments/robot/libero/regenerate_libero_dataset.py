@@ -132,8 +132,11 @@ def main(args):
             joint_states = []
             robot_states = []
             agentview_images = []
-            agentview_segmentation_instances = []
+            agentview_depths = []
             eye_in_hand_images = []
+            eye_in_hand_depths = []
+            agentview_segmentation_instances = []
+            eye_in_hand_segmentation_instances = []
 
             # Replay original demo actions in environment and record observations
             for _, action in enumerate(orig_actions):
@@ -172,8 +175,13 @@ def main(args):
                     )
                 )
                 agentview_images.append(obs["agentview_image"])
-                agentview_segmentation_instances.append(obs["agentview_segmentation_instance"])
                 eye_in_hand_images.append(obs["robot0_eye_in_hand_image"])
+
+                agentview_segmentation_instances.append(obs["agentview_segmentation_instance"])
+                eye_in_hand_segmentation_instances.append(obs["robot0_eye_in_hand_segmentation_instance"])
+
+                agentview_depths.append(obs["agentview_depth"])
+                eye_in_hand_depths.append(obs["robot0_eye_in_hand_depth"])
 
                 # Execute demo action in environment
                 obs, reward, done, info = env.step(action.tolist())
@@ -195,7 +203,10 @@ def main(args):
                 obs_grp.create_dataset("ee_ori", data=np.stack(ee_states, axis=0)[:, 3:])
                 obs_grp.create_dataset("agentview_rgb", data=np.stack(agentview_images, axis=0))
                 obs_grp.create_dataset("eye_in_hand_rgb", data=np.stack(eye_in_hand_images, axis=0))
+                obs_grp.create_dataset("agentview_depth", data=np.stack(agentview_depths, axis=0))
+                obs_grp.create_dataset("eye_in_hand_depth", data=np.stack(eye_in_hand_depths, axis=0))
                 obs_grp.create_dataset("agentview_segmentation_instance", data=np.stack(agentview_segmentation_instances, axis=0))
+                obs_grp.create_dataset("eye_in_hand_segmentation_instance", data=np.stack(eye_in_hand_segmentation_instances, axis=0))                
                 ep_data_grp.create_dataset("instance_names", data=np.array([key.encode("utf-8") for key in env.env.model.instances_to_ids.keys()]))
                 ep_data_grp.create_dataset("actions", data=actions)
                 ep_data_grp.create_dataset("states", data=np.stack(states))
